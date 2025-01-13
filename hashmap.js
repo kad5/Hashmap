@@ -111,10 +111,12 @@ class HashMap {
       }
       if (node.key === key && node.nextNode === null) {
         this.map[hashIndex] = null;
+        this.checkLoad();
         return true;
       }
       if (node.key === key && node.nextNode !== null) {
         this.map[hashIndex] = node.nextNode;
+        this.checkLoad();
         return true;
       }
       let previousNode = node;
@@ -122,6 +124,7 @@ class HashMap {
       while (node !== null) {
         if (node.key === key) {
           previousNode.nextNode = node.nextNode || null;
+          this.checkLoad();
           return true;
         }
         previousNode = node;
@@ -248,6 +251,7 @@ class HashMap {
 //testing
 console.log("started");
 const test = new HashMap();
+console.log(test);
 
 test.set("apple", "red");
 test.set("banana", "yellow");
@@ -261,5 +265,11 @@ test.set("ice cream", "white");
 test.set("jacket", "blue");
 test.set("kite", "pink");
 test.set("lion", "golden");
-
 console.log(test);
+
+test.set("moon", "silver");
+console.log(test);
+
+// testing complete. all methods tested in console and work as expected
+// also resizing and rehashing works with removing items
+// no bugs
