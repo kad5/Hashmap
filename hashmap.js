@@ -4,44 +4,52 @@ if (index < 0 || index >= buckets.length) {
 }*/
 
 class HashMap {
-  constructor() {
-    this.capacity = 16;
-    this.loadFactor = 0;
+  constructor(capacity) {
     this.map = [];
+    this.capacity = capacity;
+    this.loadFactor = this.length() / this.capacity;
+    this.isBeingResized = false;
+    // call initMap automatically when a new object is created
+    this.initMap();
   }
 
+  // initMap:
+  // if the map is empty, it fills its capacity with nulls and early returns since
+  // length() would be zero. if the map has items it creates a shallow copy and
+  // then intialize a new map with new capacity then rehashes those items from the
+  // shallow copy into the newly created expanded or shrunk map. To prevent short
+  // circuiting during an event of rehashing, isBeingResized blocks checkLoad
+  // which gets called after each item is rehashed via set(). The logic of rehashing
+  // works via rehashing all keys in the shallow copy and spread them over the new map
+  // first if statement in the forEach : if the bucket has only 1 key value pair.
+  // 2nd if: if the bucket has a linked list, loop and hash each node starting by 0.
+  // we dont have to reset the nextNode to null since we are taking the key and
+  // value and creating entire new linked lists via out set method.
+  // lastly reset the isBeingResized to allow resizing if needed.
+
   initMap() {
-    //create a shallow copy of our map
+    this.isBeingResized = true;
+    const hasItems = this.length();
     const shallowCopy = this.map.slice();
-    //create a new full capacity empty map
     for (let i = 0; i < this.capacity; i++) {
       this.map.push(null);
     }
-    //rehash all keys in the old buckets and spread them over the new map
+    if (hasItems === 0) return;
     shallowCopy.forEach((bucket) => {
-      // if the bucket has only 1 key value pair
       if (bucket.nextNode === null) {
         const newHashKey = this.hash(bucket.key);
         this.set(newHashKey, bucket.value);
       }
-      // if the bucket has a linked list, loop and hash each
       if (bucket.nextNode !== null) {
         let node = bucket;
         while (node !== null) {
           const newHashKey = this.hash(node.key);
           this.set(newHashKey, node.value);
           node = node.nextNode;
-          // we dont have to reset the nextNode to null since we are
-          // taking the key and value and creating entire new linked lists
-          // via out set method.
         }
       }
     });
-
-    for (let i = 0; i < this.map.length; i++) {
-      updatedMap[i] = this.map[i];
-    }
-    this.map = updatedMap;
+    this.isBeingResized = false;
   }
 
   hash(key) {
@@ -53,21 +61,28 @@ class HashMap {
     return Math.abs(hashCode);
   }
 
+  //set:
+  // takes the key and value and creates a temp bucket with a hashKey. then if the
+  // index corresponding to the  hashKey is empty it adds the bucket, if there is a index
+  // if checks if the key matches the existing key, if a match it changes the value
+  // if no match, then it checks if there is a linked list, if there is: it loops through
+  // each node and tries to find a key matching the given key. if it does, then it updates
+  // the value. if it doesnt then it adds it to the tail of the linked list [works also if
+  // the linked list has only a head]. after each new bucket item is introduced, it recal-
+  // culates the load factor and checks the load limits to intialize an expansion if needed
+
   set(key, value) {
     const bucket = { key, value, nextNode: null };
     const hashIndex = this.hash(key);
-    // if the index is empty
     if (this.map[hashIndex] === null) {
       this.map[hashIndex] = bucket;
-
+      this.checkLoad();
       return;
     }
-    // to modify a value for an existing key at the head
     if (this.map[hashIndex] !== null && this.map[hashIndex].key === key) {
       this.map[hashIndex].value = value;
       return;
     }
-    // to modify a value for an existing key in a linked list or create a new list item
     if (this.map[hashIndex] !== null && this.map[hashIndex].key !== key) {
       let tempNode = this.map[hashIndex];
       while (tempNode.nextNode !== null && tempNode.nextNode.key !== key) {
@@ -78,8 +93,29 @@ class HashMap {
       }
       if (tempNode.nextNode === null) {
         tempNode.nextNode = bucket;
+        this.checkLoad();
       }
       return;
+    }
+  }
+
+  //checkload:
+  // gets called after each item is added or removed. it first updates
+  // the load factor. then only if there is no process of rehashing going
+  // it proceeds to check if a rehash and expansion or shrinkage is needed
+  // shrinkage can only happen if the limit above a base capacity of 16
+
+  checkLoad() {
+    this.loadFactor = this.length() / this.capacity;
+    if (this.isBeingResized === true) return;
+    if (this.loadFactor >= 0.8) {
+      this.capacity = this.capacity * 2;
+      this.initMap();
+      return;
+    }
+    if (this.loadFactor <= 0.2 && this.capacity > 16) {
+      this.capacity = this.capacity / 2;
+      this.initMap();
     }
   }
 
