@@ -9,4 +9,11 @@ a hashmap code:
 // rehashing for expanding or shrinking works by creating a shallow copy and rehashing from that to a new map reset. I understand the shallow copy could affect
 // the memory negatively in larger arrays. since this is only a pracice, i didnt bother figuring changing the array in situ without a shallow copy. 
 // maybe later i will
-// the code works and is bug free. some optimization can be done, however this version is concise and also easily readable
+// the code works and is bug free. 
+
+// on review of other students' code, some optimization can be done; like creating separate logic for handling the linked list and use call backs rather
+than repeating the same code logic several times, also there are two redundant lines in one of the methods. 
+
+// However in general this version is concise and also easily readable, manages all edge cases which some of the other codes don't address. A commonly missed edge
+// case was related to collision and linked list implementation.
+
