@@ -1,8 +1,3 @@
-/*
-if (index < 0 || index >= buckets.length) {
-  throw new Error("Trying to access index out of bounds");
-}*/
-
 class HashMap {
   constructor(capacity = 16) {
     this.map = [];
@@ -29,20 +24,25 @@ class HashMap {
     this.isBeingResized = true;
     const hasItems = this.length();
     const shallowCopy = this.map.slice();
+    this.map = [];
     for (let i = 0; i < this.capacity; i++) {
       this.map.push(null);
     }
-    if (hasItems === 0) return;
+    if (hasItems === 0) {
+      this.isBeingResized = false;
+      return;
+    }
     shallowCopy.forEach((bucket) => {
+      if (bucket === null) return;
       if (bucket.nextNode === null) {
         const newHashKey = this.hash(bucket.key);
-        this.set(newHashKey, bucket.value);
+        this.set(bucket.key, bucket.value);
       }
       if (bucket.nextNode !== null) {
         let node = bucket;
         while (node !== null) {
           const newHashKey = this.hash(node.key);
-          this.set(newHashKey, node.value);
+          this.set(node.key, node.value);
           node = node.nextNode;
         }
       }
@@ -55,8 +55,8 @@ class HashMap {
     for (let i = 0; i < key.length; i++) {
       hashCode = (primeNumber * hashCode + key.charCodeAt(i)) % this.capacity;
     }
-    if (Math.abs(hashCode) > this.capacity) {
-      throw new Error("Limit exceeded");
+    if (Math.abs(hashCode) >= this.capacity) {
+      throw new Error("Trying to access index out of bounds");
     }
     return Math.abs(hashCode);
   }
@@ -138,12 +138,12 @@ class HashMap {
   checkLoad() {
     this.loadFactor = this.length() / this.capacity;
     if (this.isBeingResized === true) return;
-    if (this.loadFactor >= 0.75) {
+    if (this.loadFactor > 0.75) {
       this.capacity = this.capacity * 2;
       this.initMap();
       return;
     }
-    if (this.loadFactor <= 0.25 && this.capacity > 16) {
+    if (this.loadFactor < 0.25 && this.capacity > 16) {
       this.capacity = this.capacity / 2;
       this.initMap();
     }
@@ -242,5 +242,24 @@ class HashMap {
   }
 }
 
-const myMap = hashmapGenerator();
-console.log(myMap);
+// the extra credit in the assignment for a hashSet is the exact same code minus all the
+// value related logic. it would be too much effort to duplicate all this code.
+
+//testing
+console.log("started");
+const test = new HashMap();
+
+test.set("apple", "red");
+test.set("banana", "yellow");
+test.set("carrot", "orange");
+test.set("dog", "brown");
+test.set("elephant", "gray");
+test.set("frog", "green");
+test.set("grape", "purple");
+test.set("hat", "black");
+test.set("ice cream", "white");
+test.set("jacket", "blue");
+test.set("kite", "pink");
+test.set("lion", "golden");
+
+console.log(test);
